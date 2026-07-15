@@ -4,7 +4,19 @@ import fs from 'fs';
 import fsPromises from 'fs/promises';
 
 // Define MongoDB Connection URL
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://rgl0ogno8m_db_user:kllG1V4lDZOiUzqg@ac-f3s2kej-shard-00-00.xzwb3vq.mongodb.net:27017,ac-f3s2kej-shard-00-01.xzwb3vq.mongodb.net:27017,ac-f3s2kej-shard-00-02.xzwb3vq.mongodb.net:27017/abugoura?ssl=true&replicaSet=atlas-1468q9-shard-0&authSource=admin&appName=Cluster0';
+const APPLET_ID = '65ee4f61-eee3-4ae1-917c-a3ffa2ab9528';
+const ISOLATED_DB_NAME = `abugoura_${APPLET_ID.replace(/-/g, '_')}`;
+
+const rawMongoURI = process.env.MONGO_URI || 'mongodb://rgl0ogno8m_db_user:kllG1V4lDZOiUzqg@ac-f3s2kej-shard-00-00.xzwb3vq.mongodb.net:27017,ac-f3s2kej-shard-00-01.xzwb3vq.mongodb.net:27017,ac-f3s2kej-shard-00-02.xzwb3vq.mongodb.net:27017/abugoura?ssl=true&replicaSet=atlas-1468q9-shard-0&authSource=admin&appName=Cluster0';
+
+let MONGO_URI = rawMongoURI;
+if (MONGO_URI.includes('/abugoura?')) {
+  MONGO_URI = MONGO_URI.replace('/abugoura?', `/${ISOLATED_DB_NAME}?`);
+} else if (MONGO_URI.includes('/abugoura/')) {
+  MONGO_URI = MONGO_URI.replace('/abugoura/', `/${ISOLATED_DB_NAME}/`);
+} else if (MONGO_URI.endsWith('/abugoura')) {
+  MONGO_URI = MONGO_URI.replace('/abugoura', `/${ISOLATED_DB_NAME}`);
+}
 
 // Local JSON Database Fallback Path
 const LOCAL_DB_PATH = path.join(process.cwd(), 'abugoura_db.json');

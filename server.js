@@ -21,7 +21,7 @@ process.on('unhandledRejection', (reason, promise) => {
   // Keep the process alive, log the event for self-healing monitoring
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 const HOST = '0.0.0.0';
 
 async function bootstrap() {

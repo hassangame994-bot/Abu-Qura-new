@@ -240,21 +240,25 @@ export async function syncMenuWithMongo(force = false) {
           if (JSON.stringify(cloudPrice) !== JSON.stringify(localPrice)) { mergedItem.price = cloudPrice; itemNeedsUpdate = true; }
           if (JSON.stringify(cloudSizes) !== JSON.stringify(localSizes)) { mergedItem.sizes = cloudSizes; itemNeedsUpdate = true; }
           if (cloudDescription !== localDescription) { mergedItem.description = cloudDescription; itemNeedsUpdate = true; }
-          if (cloudImage !== localImage) { mergedItem.image = cloudImage; itemNeedsUpdate = true; }
+          
+          if (cloudImage !== localImage) {
+            if (localImage && !cloudImage) {
+              // Self-healing check: Do not overwrite a beautiful local custom image with an empty cloud image!
+              // Instead, preserve the local custom image and mark the item to be synced back up to MongoDB Cloud.
+              mergedItem.image = localImage;
+              mergedItem.isModifiedLocally = true;
+              itemNeedsUpdate = true;
+            } else {
+              mergedItem.image = cloudImage;
+              itemNeedsUpdate = true;
+            }
+          }
+          
           if (cloudIsAvailable !== localIsAvailable) { mergedItem.isAvailable = cloudIsAvailable; itemNeedsUpdate = true; }
 
           if (itemNeedsUpdate) {
             localUpdated = true;
-            updatedLocalMenuItems.push({
-              ...mergedItem,
-              name: cloudName,
-              category: cloudCategory,
-              price: cloudPrice,
-              sizes: cloudSizes,
-              description: cloudDescription,
-              image: cloudImage,
-              isAvailable: cloudIsAvailable
-            });
+            updatedLocalMenuItems.push(mergedItem);
             console.log(`📡 [Self-Healing] Updated local menu item from cloud: ${localItem.id}`);
           } else {
             // Push sanitized local item to avoid any potential undefined fields in JSON backup
